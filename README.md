@@ -4,7 +4,9 @@
 
 순서
 1. yolo 학습
+-> coco det / coco seg / train 결과끼리 비교
 2. sam 사용 / 학습x
 3. grabcut 사용
 4. 결과정리
 5. 코드정리 및 docker
+6. 성능개선
