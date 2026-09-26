@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# Custom
+assignment_data/
+assignment_data.zip
+*.pdf
