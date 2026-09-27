@@ -5,7 +5,7 @@ model:
 model:
   detection:
     name: base_detector_v1
-    download_link: "https://drive.google.com/uc?export=download&id=1EVLQp6R3Y72pn85PxJBwpoUTwns3BUgX"
+    download_link: "https://drive.google.com/uc?export=download&id=1MlUVlT7hrCXo_FcMtSqK4GiGfsS7is9Q"
   sam:
     name: base_sam_v1
     download_link: "https://drive.google.com/uc?export=download&id=1J2Xfk2pGCvGQUNGtWuxTZEYpnJvEkXiB"

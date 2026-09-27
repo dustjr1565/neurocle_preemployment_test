@@ -4,9 +4,8 @@
 ## 설치 방법
 1. library 설치
 - python version 3.10 권장
-- 아래 명령어를 이용해 설치 후 사용
+- 코드 다운로드 후 아래 명령어를 이용해 설치 후 사용
 ```bash
-cd autolabel
 pip install .
 ```
 
@@ -26,3 +25,17 @@ autolabel inference --input_dir "./assignment_data/images"
         - 모델에 대한 디렉터리 경로입니다. 기본값은 './model' 이며 존재하지 않을 시 다운로드하여 사용합니다.
     - `--vis`
         - 시각화한 결과를 출력할 것인지에 대한 설정입니다. 기본값은 False이며 결과는 './outputs/inference/vis'에 저장됩니다.
+
+
+## 결과 확인
+- 주어진 데이터에 대한 추론결과는 아래 경로에서 다운로드 받아 확인할 수 있습니다.
+    - JSON 파일: ...
+    - DB 파일: ...
+
+
+## 개발 환경
+| 구분 | 사양 |
+|---|---|
+| CPU | 13th Gen Intel® Core™ i7-1355U |
+| Memory | 16GB DDR4 |
+| OS | Windows 11 |

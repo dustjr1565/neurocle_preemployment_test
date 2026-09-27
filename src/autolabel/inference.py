@@ -99,13 +99,13 @@ def inference_model(
                         0
                     )
 
-                    cv2.polylines(
-                        image,
-                        [pts],
-                        isClosed=True,
-                        color=(0, 255, 255),
-                        thickness=2
-                    )
+                    # cv2.polylines(
+                    #     image,
+                    #     [pts],
+                    #     isClosed=True,
+                    #     color=(0, 255, 255),
+                    #     thickness=2
+                    # )
 
             # bbox + class명
             for class_id, conf, bbox in zip(class_ids, confidences, boxes):
