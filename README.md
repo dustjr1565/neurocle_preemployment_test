@@ -39,3 +39,5 @@ autolabel inference --input_dir "./assignment_data/images"
 | CPU | 13th Gen Intel® Core™ i7-1355U |
 | Memory | 16GB DDR4 |
 | OS | Windows 11 |
+
+- GPU는 사용하지않음.
