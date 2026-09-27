@@ -1,0 +1,11 @@
+app_version: 0.1.0
+app_name: auto_label
+
+model:
+model:
+  detection:
+    name: base_detector_v1
+    download_link: "https://drive.google.com/uc?export=download&id=1EVLQp6R3Y72pn85PxJBwpoUTwns3BUgX"
+  sam:
+    name: base_sam_v1
+    download_link: "https://drive.google.com/uc?export=download&id=1J2Xfk2pGCvGQUNGtWuxTZEYpnJvEkXiB"
