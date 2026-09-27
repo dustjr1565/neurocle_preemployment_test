@@ -2,6 +2,8 @@ import cv2
 from pathlib import Path
 from ultralytics import YOLO, SAM
 
+from autolabel.data import change_db_to_base_format, change_mask_to_points
+from autolabel.db import insert_image, insert_annotation, create_database, LabelStatus
 
 def inference_model(
         image_dir: str,
@@ -16,23 +18,32 @@ def inference_model(
     image_dir = Path(image_dir)
     output_dir = Path(output_dir) 
     output_dir.mkdir(parents=True)
+    db_path = output_dir / "autolabel.db"
+    create_database(str(db_path))
 
     if vis:
         vis_dir = output_dir / "vis"
         vis_dir.mkdir(parents=True)
 
-    for image_path in list(image_dir.glob("*.jpg")):
+    print(f"추론할 이미지 개수: {len(list(image_dir.glob('*.jpg')))}")
+    for image_path in list(image_dir.glob("*.jpg"))[:5]:
         image_path = image_dir / image_path.name
         image = cv2.imread(str(image_path))
-
+        height, width, _ = image.shape
         det_results = detector(image, verbose=False)
         det_result = det_results[0]
 
-        # Detection 결과가 없는 경우
+        image_id = insert_image(
+            file_name=str(image_path.name),
+            width=width,
+            height=height,
+            db_path=db_path,
+            status=LabelStatus.COMPLETED
+        )
+
         if det_result.boxes is None or len(det_result.boxes) == 0:
             continue
 
-        # xyxy: (N, 4)
         class_ids = det_result.boxes.cls.cpu().numpy().astype(int)
         confidences = det_result.boxes.conf.cpu().numpy()
         boxes = det_result.boxes.xyxy.cpu().numpy()
@@ -42,12 +53,27 @@ def inference_model(
         )
 
         result = sam_results[0]
+        masks = result.masks.data.cpu().numpy()
+
+        for class_id, conf, bbox, mask in zip(class_ids, confidences, boxes, masks):
+            x1, y1, x2, y2 = map(int, bbox)
+            w, h = int(x2 - x1), int(y2 - y1)
+            class_name = det_result.names[int(class_id)]
+            insert_annotation(
+                image_id=image_id,
+                class_id=int(class_ids),
+                class_name=class_name,
+                bbox=f"[{x1},{y1},{w},{h}]",
+                segment=change_mask_to_points(mask),
+                confidence=float(conf),
+                auto_labeled=True,
+                need_review=False,
+                db_path=db_path
+            )
+            
 
         if vis:
-            # mask 시각화
             if result.masks is not None:
-                masks = result.masks.data.cpu().numpy()
-
                 for mask in masks:
                     mask = mask.astype(bool)
 
@@ -89,3 +115,6 @@ def inference_model(
 
             vis_path = vis_dir / image_path.name
             cv2.imwrite(str(vis_path), image)
+
+    json_path = output_dir / "autolabel.json"
+    change_db_to_base_format(db_path, json_path)

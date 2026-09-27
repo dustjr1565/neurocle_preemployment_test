@@ -2,8 +2,31 @@ import argparse
 import random
 import shutil
 import json
-import cv2
 from pathlib import Path
+from datetime import datetime, timezone, timedelta
+
+import cv2
+import numpy as np
+
+from autolabel.db import get_image_count, get_image, get_annotations
+
+CLASS_NAMES = [
+    "MouthWash",
+    "HairRoll",
+    "VaselinJar",
+    "PillJar",
+    "HandCream",
+    "Tissue",
+    "MouthWash Box",
+    "Phone",
+]
+
+CLASS_TO_ID = {
+    name: idx
+    for idx, name in enumerate(CLASS_NAMES)
+}
+
+KST = timezone(timedelta(hours=9))
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -36,6 +59,38 @@ def parse_args():
 
     return parser.parse_args()
 
+
+def change_mask_to_points(mask: np.ndarray) -> list[list[int]]:
+    """
+    bool mask -> polygon point list
+
+    Args:
+        mask: (H, W) bool numpy array
+
+    Returns:
+        [[x1, y1], [x2, y2], ...]
+    """
+
+    # bool -> uint8
+    mask_uint8 = (mask.astype(np.uint8) * 255)
+
+    # 외곽선 추출
+    contours, _ = cv2.findContours(
+        mask_uint8,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE,
+    )
+
+    if not contours:
+        return []
+
+    # 가장 큰 영역의 contour 사용
+    contour = max(contours, key=cv2.contourArea)
+
+    # (N, 1, 2) -> (N, 2) -> list
+    points = contour.reshape(-1, 2).tolist()
+
+    return points
 
 def get_base_format_infos(label_path: str) -> list[dict]:
     infos = []
@@ -107,24 +162,7 @@ def visualize_data(root_dir: str, output_dir: str):
     return image
 
 
-CLASS_NAMES = [
-    "MouthWash",
-    "HairRoll",
-    "VaselinJar",
-    "PillJar",
-    "HandCream",
-    "Tissue",
-    "MouthWash Box",
-    "Phone",
-]
-
-CLASS_TO_ID = {
-    name: idx
-    for idx, name in enumerate(CLASS_NAMES)
-}
-
-
-def change_yolo_format(root_dir: str, output_dir: str):
+def change_base_to_yolo_format(root_dir: str, output_dir: str):
     image_dir = Path(root_dir) / "images"
     label_path = Path(root_dir) / "label.json"
     output_dir = Path(output_dir) / "yolo"
@@ -228,6 +266,92 @@ def change_yolo_format(root_dir: str, output_dir: str):
     print(f"[Done] Val   : {len(val_infos)}")
     print(f"[Done] Output: {output_dir}")
 
+def change_db_to_base_format(db_path: str, output_path: str):
+    image_num = get_image_count(db_path)
+
+    label = {
+        "label_type": "obd",
+        "source": "labelset",
+        "version": "5.0.2.32",
+        "classes": [
+            {
+                "name": "MouthWash",
+                "color": "rgba(167, 238, 62, 1)"
+            },
+            {
+                "name": "HairRoll",
+                "color": "rgba(255, 180, 12, 1)"
+            },
+            {
+                "name": "VaselinJar",
+                "color": "rgba(251, 92, 73, 1)"
+            },
+            {
+                "name": "PillJar",
+                "color": "rgba(60, 109, 240, 1)"
+            },
+            {
+                "name": "HandCream",
+                "color": "rgba(52, 188, 110, 1)"
+            },
+            {
+                "name": "Tissue",
+                "color": "rgba(86, 204, 242, 1)"
+            },
+            {
+                "name": "MouthWash Box",
+                "color": "rgba(248, 126, 172, 1)"
+            },
+            {
+                "name": "Phone",
+                "color": "rgba(167, 238, 62, 1)"
+            }
+        ],
+        "data": [],
+        "time": datetime.now(KST).isoformat()
+    }
+
+    for image_id in range(1, 1+image_num):
+        image = get_image(db_path,image_id)
+        annotations = get_annotations(
+            db_path,
+            image_id=image_id
+        )
+        data = {
+            "fileName": image["file_name"],
+            "set": "",
+            "classLabel": "",
+            "regionLabel": [],
+            "retestset": 0,
+            "rotation_angle": 0.0,
+            "width": image["width"],
+            "height": image["height"],
+        }
+
+        for ann in annotations:
+            x1, y1, w, h = list(map(int, eval(ann["bbox"])))
+            data["regionLabel"].append(
+                {
+                    "className": ann["class_name"],
+                    "x": x1,
+                    "y": y1,
+                    "type": "Rect",
+                    "width": w,
+                    "height": h
+                }
+            )
+
+        label["data"].append(data)
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(
+            label,
+            f,
+            ensure_ascii=False,
+            indent=4
+        )
+        
+
 def main():
     args = parse_args()
 
@@ -239,7 +363,7 @@ def main():
         visualize_data(args.input, args.output)
 
     if args.yolo:
-        change_yolo_format(args.input, args.output)
+        change_base_to_yolo_format(args.input, args.output)
     
 
 
