@@ -75,10 +75,6 @@ def inference_model(
                 db_path=db_path
             )
 
-            if qc_result:
-                print(f"QQQQCCCC: {image_path.name}, class_name: {class_name}")
-            
-
         if vis:
             if result.masks is not None:
                 for mask in masks:
