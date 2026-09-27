@@ -1,9 +1,11 @@
 import cv2
+import numpy as np
 from pathlib import Path
 from ultralytics import YOLO, SAM
 
 from autolabel.data import change_db_to_base_format, change_mask_to_points
 from autolabel.db import insert_image, insert_annotation, create_database, LabelStatus
+from autolabel.quality import run_quality_check
 
 def inference_model(
         image_dir: str,
@@ -26,7 +28,7 @@ def inference_model(
         vis_dir.mkdir(parents=True)
 
     print(f"추론할 이미지 개수: {len(list(image_dir.glob('*.jpg')))}")
-    for image_path in list(image_dir.glob("*.jpg"))[:5]:
+    for image_path in list(image_dir.glob("*.jpg")):
         image_path = image_dir / image_path.name
         image = cv2.imread(str(image_path))
         height, width, _ = image.shape
@@ -55,30 +57,43 @@ def inference_model(
         result = sam_results[0]
         masks = result.masks.data.cpu().numpy()
 
-        for class_id, conf, bbox, mask in zip(class_ids, confidences, boxes, masks):
+        qc_results = run_quality_check(image, confidences, boxes, masks)
+
+        for class_id, conf, bbox, mask, qc_result in zip(class_ids, confidences, boxes, masks, qc_results):
             x1, y1, x2, y2 = map(int, bbox)
             w, h = int(x2 - x1), int(y2 - y1)
             class_name = det_result.names[int(class_id)]
             insert_annotation(
                 image_id=image_id,
-                class_id=int(class_ids),
+                class_id=int(class_id),
                 class_name=class_name,
                 bbox=f"[{x1},{y1},{w},{h}]",
                 segment=change_mask_to_points(mask),
                 confidence=float(conf),
                 auto_labeled=True,
-                need_review=False,
+                need_review=qc_result,
                 db_path=db_path
             )
+
+            if qc_result:
+                print(f"QQQQCCCC: {image_path.name}, class_name: {class_name}")
             
 
         if vis:
             if result.masks is not None:
                 for mask in masks:
+                    points = change_mask_to_points(mask)
+                    pts = np.array(points, dtype=np.int32)
+                    pts = pts.reshape((-1, 1, 2))
                     mask = mask.astype(bool)
 
                     overlay = image.copy()
-                    overlay[mask] = (0, 0, 255)
+
+                    cv2.fillPoly(
+                        overlay,
+                        [pts],
+                        (0, 0, 255)
+                    )
 
                     image = cv2.addWeighted(
                         image,
@@ -86,6 +101,14 @@ def inference_model(
                         overlay,
                         0.7,
                         0
+                    )
+
+                    cv2.polylines(
+                        image,
+                        [pts],
+                        isClosed=True,
+                        color=(0, 255, 255),
+                        thickness=2
                     )
 
             # bbox + class명

@@ -1,29 +1,14 @@
 # neurocle_preemployment_test
 뉴로클 채용과제 레포
 
-
-순서
-1. yolo 학습
--> coco det / coco seg / train 결과끼리 비교
-2. sam 사용 / 학습x
-3. grabcut 사용
-4. 결과정리
-5. 코드정리 및 docker
-6. 성능개선
-
-
 ## 설치 방법
-1. Docker 사용
-
-
-2. library 설치
+1. library 설치
 - python version 3.10 권장
 - 아래 명령어를 이용해 설치 후 사용
 ```bash
 cd autolabel
 pip install .
 ```
-
 
 ## 사용 방법
 1. Inference 
@@ -38,10 +23,6 @@ autolabel inference --input_dir "./assignment_data/images"
     - `--output_dir`
         - 출력결과를 저장할 디렉터리 경로입니다. 기본값은 './outputs/inference' 입니다.
     - `--model_dir`
-        - 모델에 대한 디렉터리 경로입니다. 기본값은 './model' 이며 존재하지않을 시 다운로드하여 사용합니다.
+        - 모델에 대한 디렉터리 경로입니다. 기본값은 './model' 이며 존재하지 않을 시 다운로드하여 사용합니다.
     - `--vis`
         - 시각화한 결과를 출력할 것인지에 대한 설정입니다. 기본값은 False이며 결과는 './outputs/inference/vis'에 저장됩니다.
-
-2. train
-```bash
- 

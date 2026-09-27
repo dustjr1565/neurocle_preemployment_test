@@ -337,7 +337,8 @@ def change_db_to_base_format(db_path: str, output_path: str):
                     "y": y1,
                     "type": "Rect",
                     "width": w,
-                    "height": h
+                    "height": h,
+                    "segment": ann["segment"]
                 }
             )
 
