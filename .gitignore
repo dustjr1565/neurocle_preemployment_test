@@ -227,3 +227,4 @@ assignment_data.zip
 ## outputs
 outputs/
 runs/
+*.pt

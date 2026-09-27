@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autolabel"
+version = "0.1.0"
+
+dependencies = [
+    "torch==2.14.0",
+    "torchvision==0.29.0",
+    "ultralytics==8.4.163",
+]
+
+[project.scripts]
+autolabel = "autolabel.cli:main"

@@ -1,6 +1,4 @@
-# 과제용 -> yolo format으로 변경import argparse
 import argparse
-import glob
 import random
 import shutil
 import json
