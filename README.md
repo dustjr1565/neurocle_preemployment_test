@@ -28,9 +28,8 @@ autolabel inference --input_dir "./assignment_data/images"
 
 
 ## 결과 확인
-- 주어진 데이터에 대한 추론결과는 아래 경로에서 다운로드 받아 확인할 수 있습니다.
-    - JSON 파일: ...
-    - DB 파일: ...
+- 주어진 데이터에 대한 추론결과(JSON, DB 파일, 시각화 이미지)는 아래 경로에서 다운로드 받아 확인할 수 있습니다.
+    - download link: https://drive.google.com/drive/folders/1u0jlCFLUWjNKpmbf8m5aOQydz9-U06hG?usp=sharing
 
 
 ## 개발 환경
