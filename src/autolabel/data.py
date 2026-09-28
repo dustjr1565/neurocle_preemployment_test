@@ -71,10 +71,8 @@ def change_mask_to_points(mask: np.ndarray) -> list[list[int]]:
         [[x1, y1], [x2, y2], ...]
     """
 
-    # bool -> uint8
-    mask_uint8 = (mask.astype(np.uint8) * 255)
+    mask_uint8 = mask.astype(np.uint8) * 255
 
-    # 외곽선 추출
     contours, _ = cv2.findContours(
         mask_uint8,
         cv2.RETR_EXTERNAL,
@@ -84,11 +82,21 @@ def change_mask_to_points(mask: np.ndarray) -> list[list[int]]:
     if not contours:
         return []
 
-    # 가장 큰 영역의 contour 사용
-    contour = max(contours, key=cv2.contourArea)
+    points = []
 
-    # (N, 1, 2) -> (N, 2) -> list
-    points = contour.reshape(-1, 2).tolist()
+    for contour in contours:
+
+        # 너무 작은 노이즈 제거가 필요하다면
+        if cv2.contourArea(contour) <= 0:
+            continue
+
+        contour_points = (
+            contour
+            .reshape(-1, 2)
+            .tolist()
+        )
+
+        points.append(contour_points)
 
     return points
 
@@ -338,7 +346,8 @@ def change_db_to_base_format(db_path: str, output_path: str):
                     "type": "Rect",
                     "width": w,
                     "height": h,
-                    "segment": ann["segment"]
+                    "segment": ann["segment"],
+                    "need_review": ann["need_review"]
                 }
             )
 

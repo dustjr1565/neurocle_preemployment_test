@@ -79,17 +79,21 @@ def inference_model(
             if result.masks is not None:
                 for mask in masks:
                     points = change_mask_to_points(mask)
-                    pts = np.array(points, dtype=np.int32)
-                    pts = pts.reshape((-1, 1, 2))
                     mask = mask.astype(bool)
 
                     overlay = image.copy()
 
-                    cv2.fillPoly(
-                        overlay,
-                        [pts],
-                        (0, 0, 255)
-                    )
+                    for polygon in points:
+                        pts = np.array(
+                            polygon,
+                            dtype=np.int32
+                        ).reshape((-1, 1, 2))
+
+                        cv2.fillPoly(
+                            overlay,
+                            [pts],
+                            (0, 0, 255)
+                        )
 
                     image = cv2.addWeighted(
                         image,
@@ -108,16 +112,21 @@ def inference_model(
                     # )
 
             # bbox + class명
-            for class_id, conf, bbox in zip(class_ids, confidences, boxes):
+            for class_id, conf, bbox, qc_result in zip(class_ids, confidences, boxes, qc_results):
                 x1, y1, x2, y2 = map(int, bbox)
                 class_name = det_result.names[int(class_id)]
                 label = f"{class_name} {conf:.2f}"
+
+                if qc_result:
+                    color = (0, 255, 255)
+                else:
+                    color = (0, 0, 255)
                 
                 cv2.rectangle(
                     image,
                     (x1, y1),
                     (x2, y2),
-                    (0, 0, 255),
+                    color,
                     2
                 )
 
@@ -127,7 +136,7 @@ def inference_model(
                     (x1, max(y1 - 10, 20)),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.6,
-                    (0, 0, 255),
+                    color,
                     2,
                     cv2.LINE_AA
                 )

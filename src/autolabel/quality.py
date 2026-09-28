@@ -137,9 +137,13 @@ def run_quality_check(
             roi_mask
         )
 
-        missing_ratio = (
-            missing_pixel_count / mask_pixel_count
-        )
+
+        if mask_pixel_count > 0:
+            missing_ratio = (
+                missing_pixel_count / mask_pixel_count
+            )
+        else:
+            missing_ratio = 1
 
         if missing_ratio >= MISSING_AREA_RATIO_THRESHOLD:
             results[i] = True
